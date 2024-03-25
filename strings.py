@@ -6,7 +6,7 @@ COMMANDS = {
              "если вам надо понять как работает бот введите /help"
 
 }
-TOKEN = "aga"
+TOKEN = "6569851786:AAEX6BpoCrlguxu4T1CgForFdWc_1veMi90"
 DB_NAME = 'bot.sqlite'
 DB_TABLE_USERS_NAME = "users"
 LOGS_PATH = "logs.log"

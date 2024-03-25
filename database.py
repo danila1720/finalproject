@@ -51,13 +51,16 @@ def create_table(table_name):
                 f'''person TEXT, ''' \
                 f'''environment TEXT, ''' \
                 f'''genre TEXT, ''' \
-                f'''script TEXT)'''
+                f'''mode TEXT, ''' \
+                f'''script TEXT,''' \
+                f'''session INTEGER,''' \
+                f'''content TEXT'''
     execute_query(sql_query)
 
 
 def insert_row(values):
-    columns = '(user_id, person, environment, genre, script)'
-    sql_query = f'INSERT INTO {DB_TABLE_USERS_NAME} {columns} VALUES (?, ?, ?, ?, ?)'
+    columns = '(user_id, person, environment, genre, mode, script, session, content)'
+    sql_query = f'INSERT INTO {DB_TABLE_USERS_NAME} {columns} VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     execute_query(sql_query, values)
 
 
@@ -95,10 +98,10 @@ def clean_table(table_name):
 
 def get_data_for_user(user_id):
     if is_value_in_table(DB_TABLE_USERS_NAME, 'user_id', user_id):
-        sql_query = f'SELECT user_id, person, environment, genre, script ' \
+        sql_query = f'SELECT user_id, person, environment, genre, mode, script ' \
                     f'FROM {DB_TABLE_USERS_NAME} where user_id = ? limit 1'
         row = execute_selection_query(sql_query, [user_id])[0]
-        result = {'person': row[1], 'environment': row[2], 'genre': row[3], 'script': row[4]}
+        result = {'person': row[1], 'environment': row[2], 'genre': row[3], 'mode': row[4], 'script': row[5]}
         return result
     else:
         logging.info(f"DATABASE: Пользователь с id = {user_id} не найден")
