@@ -54,7 +54,7 @@ def create_table(table_name):
                 f'''mode TEXT, ''' \
                 f'''script TEXT,''' \
                 f'''session INTEGER,''' \
-                f'''content TEXT'''
+                f'''content TEXT)'''
     execute_query(sql_query)
 
 
