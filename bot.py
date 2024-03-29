@@ -1,8 +1,9 @@
 from telebot import TeleBot, types
 import database as db
 import strings
+from config import MAX_SESSIONS, TOKEN
 from YaGPT import ask_gpt, create_system_prompt
-bot = TeleBot(strings.TOKEN)
+bot = TeleBot(TOKEN)
 
 
 
@@ -26,24 +27,27 @@ def help(message):
 def character(message):
 
     bot.send_message(message.chat.id, "Вот вам на выбор несколько персонажей", reply_markup=create_keyboard(
-        ['Сэр Макс', "Сэр Мелифаро", "Сэр Джуффин Халли", "Леди Меламори Блим"]))
+        ['Сэр Макс', "Сэр Мелифаро", "Леди Кекки Туотли", "Леди Меламори Блим"]))
     bot.register_next_step_handler(message, genre)
 
 
 def genre(message):
     if db.is_value_in_table(strings.DB_TABLE_USERS_NAME, 'user_id', message.from_user.id):
+
         session = db.get_data_for_user(user_id=message.from_user.id)['session']
-        if session >= 4:
+        if session >= MAX_SESSIONS:
             bot.send_message(message.chat.id, "Вы превисыли кол-во доступных сессий")
         db.update_row_value(user_id=message.from_user.id, column_name='session', new_value= 1+session)
+        db.update_row_value(user_id=message.from_user.id, column_name='person', new_value=message.text)
     else:
-        db.insert_row(values=(message.from_user.id, message.text, "Нет", "Нет", "continue", "Нет", 0, 'нет'))
+        db.insert_row(values=(message.from_user.id, message.text, "Нет", "Нет", "continue", "Нет", 0, 'нет', 'нет'))
     bot.send_message(message.chat.id, "хорошо теперь выбор жанра",
                      reply_markup=create_keyboard(["Фантастика", "Детектив", "Комедия"]))
     bot.register_next_step_handler(message, environment)
 
 
 def environment(message):
+    print(db.get_data_for_user(message.from_user.id))
     db.update_row_value(user_id=message.from_user.id, column_name="genre", new_value=message.text)
     bot.send_message(message.chat.id, "А теперь выбор окружения",
                      reply_markup=create_keyboard(["Город Ехо", "Город Кеттари", "Трактир Середина Леса"]))
@@ -62,7 +66,7 @@ def generation(message):
 def prodolzhenie(message):
     user_id = message.from_user.id
     session = db.get_data_for_user(user_id=message.from_user_id)['session']
-    if session >= 4:
+    if session >= MAX_SESSIONS:
         bot.send_message(message.chat.id, "Вы превисыли кол-во доступных сессий")
     db.update_row_value(user_id=message.from_user.id, column_name='session', new_value=1 + session)
     user_collection = {user_id: [{'role': 'system', 'content': create_system_prompt(user_id=message.from_user.id + db.get_data_for_user(user_id=message.from_user.id)['content'])}]}
@@ -74,7 +78,7 @@ def prodolzhenie(message):
 def konets(message):
     user_id = message.from_user.id
     session = db.get_data_for_user(user_id=message.from_user_id)['session']
-    if session >= 4:
+    if session >= MAX_SESSIONS:
         bot.send_message(message.chat.id, "Вы превисыли кол-во доступных сессий")
     db.update_row_value(user_id=message.from_user.id, column_name='session', new_value=1 + session)
     db.update_row_value(user_id, 'mode', 'end')
@@ -82,6 +86,15 @@ def konets(message):
     result = ask_gpt(user_collection[user_id], user_id)
     db.update_row_value(user_id, 'content', result)
     bot.send_message(user_id, result)
+
+@bot.message_handler(commands=['debug'])
+def debug(message):
+    bot.send_document(message.chat.id, 'logs.log')
+
+@bot.message_handler(commands=['debug-mode'])
+def debug_mode(message):
+    db.update_row_value(message.chat.id, 'debug', 'Да')
+    bot.send_message(message.chat.id, 'Поздравляю вы перешли в debug мод')
 
 
 
