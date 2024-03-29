@@ -2,7 +2,7 @@ import logging
 
 import sqlite3
 
-from strings import DB_NAME, DB_TABLE_USERS_NAME, LOGS_PATH
+from config import DB_NAME, DB_TABLE_USERS_NAME, LOGS_PATH
 
 logging.basicConfig(filename=LOGS_PATH, level=logging.DEBUG, format="%(asctime)s %(message)s", filemode="a")
 
@@ -54,13 +54,14 @@ def create_table(table_name):
                 f'''mode TEXT, ''' \
                 f'''script TEXT,''' \
                 f'''session INTEGER,''' \
-                f'''content TEXT)'''
+                f'''content TEXT,''' \
+                f'''debug TEXT)'''
     execute_query(sql_query)
 
 
 def insert_row(values):
-    columns = '(user_id, person, environment, genre, mode, script, session, content)'
-    sql_query = f'INSERT INTO {DB_TABLE_USERS_NAME} {columns} VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    columns = '(user_id, person, environment, genre, mode, script, session, content, debug)'
+    sql_query = f'INSERT INTO {DB_TABLE_USERS_NAME} {columns} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     execute_query(sql_query, values)
 
 
@@ -97,13 +98,14 @@ def clean_table(table_name):
 
 
 def get_data_for_user(user_id):
-    if is_value_in_table(DB_TABLE_USERS_NAME, 'user_id', user_id):
-        sql_query = f'SELECT user_id, person, environment, genre, mode, script ' \
-                    f'FROM {DB_TABLE_USERS_NAME} where user_id = ? limit 1'
+    if is_value_in_table(table_name=DB_TABLE_USERS_NAME, column_name='user_id', value=user_id):
+        sql_query = f'SELECT user_id, person, environment, genre, mode, script, session, content, debug ' \
+                    f'FROM {DB_TABLE_USERS_NAME} where user_id = {user_id} limit 1'
         row = execute_selection_query(sql_query, [user_id])[0]
-        result = {'person': row[1], 'environment': row[2], 'genre': row[3], 'mode': row[4], 'script': row[5]}
+        result = {'person': row[1], 'environment': row[2], 'genre': row[3], 'mode': row[4], 'script': row[5],
+                  'session': row[6], 'content': row[7], 'debug': row[8]}
         return result
     else:
         logging.info(f"DATABASE: Пользователь с id = {user_id} не найден")
-        print("Такого пользователя нет :(")
-        return {'person': "", 'environment': "", 'genre': "", 'script': ""}
+        return {'person': "", 'environment': "", 'genre': "", "mode": "", 'script': "", 'session': "", 'content': "",
+                'debug': ''}
