@@ -1,15 +1,16 @@
 import requests
-from config import IAM_TOKEN, FOLDER_ID, GPT_MODEL, CONTINUE_STORY, END_STORY, SYSTEM_PROMPT, HEADER
+from config import URL, FOLDER_ID, GPT_MODEL, CONTINUE_STORY, END_STORY, SYSTEM_PROMPT, HEADER, MAX_TOKENS, TEMPERATURE
 import database as db
-import telebot
+from config import TOKEN
+from telebot import TeleBot
+
+bot = TeleBot(TOKEN)
 
 
-
-def ask_gpt(collection,  user_id):
-    url = f"https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+def ask_gpt(collection, user_id):
     headers = HEADER
     data = {"modelUri": f"gpt://{FOLDER_ID}/{GPT_MODEL}/latest",
-            "completionOptions": {"stream": False, "temperature": 0.6, "maxTokens": 40}, "messages": []}
+            "completionOptions": {"stream": False, "temperature": TEMPERATURE, "maxTokens": MAX_TOKENS}, "messages": []}
 
     for row in collection:
         content = row['content']
@@ -22,7 +23,10 @@ def ask_gpt(collection,  user_id):
         data["messages"].append({"role": row["role"], "text": content})
 
     try:
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(URL, headers=headers, json=data)
+        if db.get_data_for_user(user_id)['debug'] == 'Да':
+            bot.send_message(user_id, f"{response.status_code}")
+
         if response.status_code != 200:
             result = f"Status code {response.status_code}"
             return result
