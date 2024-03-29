@@ -65,7 +65,7 @@ def generation(message):
 @bot.message_handler(commands=['continue'])
 def prodolzhenie(message):
     user_id = message.from_user.id
-    session = db.get_data_for_user(user_id=message.from_user_id)['session']
+    session = db.get_data_for_user(user_id=message.from_user.id)['session']
     if session >= MAX_SESSIONS:
         bot.send_message(message.chat.id, "Вы превисыли кол-во доступных сессий")
     db.update_row_value(user_id=message.from_user.id, column_name='session', new_value=1 + session)
